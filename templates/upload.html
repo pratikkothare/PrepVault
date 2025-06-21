@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Paper - University Papers Portal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Upload New Paper
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <!-- File Upload -->
+                        <div class="mb-4">
+                            <label for="file" class="form-label">
+                                <i class="fas fa-file-pdf me-1"></i>
+                                PDF File *
+                            </label>
+                            <div class="file-upload-area" id="fileUploadArea">
+                                <input type="file" class="form-control" id="file" name="file" accept=".pdf" required style="display: none;">
+                                <div class="file-upload-content text-center p-4">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <p class="mb-2">Click to select a PDF file or drag and drop</p>
+                                    <small class="text-muted">Maximum file size: 16MB</small>
+                                </div>
+                                <div class="file-info" id="fileInfo" style="display: none;">
+                                    <div class="d-flex align-items-center p-3">
+                                        <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" id="fileName"></h6>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Paper Details -->
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="fas fa-heading me-1"></i>
+                                    Paper Title *
+                                </label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="department" class="form-label">
+                                    <i class="fas fa-building me-1"></i>
+                                    Department *
+                                </label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Mechanical">Mechanical</option>
+                                    <option value="Civil">Civil</option>
+                                    <option value="Electrical">Electrical</option>
+                                    <option value="Chemical">Chemical</option>
+                                    <option value="Biotechnology">Biotechnology</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="semester" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Semester *
+                                </label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                    <option value="3">3rd Semester</option>
+                                    <option value="4">4th Semester</option>
+                                    <option value="5">5th Semester</option>
+                                    <option value="6">6th Semester</option>
+                                    <option value="7">7th Semester</option>
+                                    <option value="8">8th Semester</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="subject" class="form-label">
+                                    <i class="fas fa-book me-1"></i>
+                                    Subject *
+                                </label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                                <div class="form-text">e.g., Data Structures, Database Management</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Year *
+                                </label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="">Select Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="exam_type" class="form-label">
+                                    <i class="fas fa-clipboard-list me-1"></i>
+                                    Exam Type *
+                                </label>
+                                <select class="form-select" id="exam_type" name="exam_type" required>
+                                    <option value="">Select Exam Type</option>
+                                    <option value="Mid Semester">Mid Semester</option>
+                                    <option value="End Semester">End Semester</option>
+                                    <option value="Lab Practical">Lab Practical</option>
+                                    <option value="Assignment">Assignment</option>
+                                    <option value="Quiz">Quiz</option>
+                                    <option value="Project">Project</option>
+                                    <option value="Viva">Viva</option>
+                                    <option value="Notes">Notes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>
+                                Description (Optional)
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Additional information about this paper..."></textarea>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div class="mb-3" id="uploadProgress" style="display: none;">
+                            <label class="form-label">Upload Progress</label>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="progressBar"></div>
+                            </div>
+                            <small class="text-muted" id="progressText">Preparing upload...</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                                <i class="fas fa-upload me-2"></i>
+                                Upload Paper
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Upload Guidelines -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Upload Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Only PDF files are accepted</li>
+                        <li>Maximum file size is 16MB</li>
+                        <li>Ensure the paper is clear and readable</li>
+                        <li>Use descriptive titles and accurate metadata</li>
+                        <li>Check for duplicate uploads before submitting</li>
+                        <li>Respect copyright and academic integrity policies</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize upload form
+document.addEventListener('DOMContentLoaded', function() {
+    setupFileUpload();
+    populateYearOptions();
+    setupFormValidation();
+});
+
+// Setup file upload functionality
+function setupFileUpload() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('file');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFile');
+
+    // Click to upload
+    fileUploadArea.addEventListener('click', function(e) {
+        if (e.target.id !== 'removeFile') {
+            fileInput.click();
+        }
+    });
+
+    // Drag and drop
+    fileUploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.add('drag-over');
+    });
+
+    fileUploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.remove('drag-over');
+    });
+
+    fileUploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        fileUploadArea.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelection(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    // Remove file
+    removeFileBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        clearFileSelection();
+    });
+}
+
+// Handle file selection
+function handleFileSelection(file) {
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file only.');
+        return;
+    }
+
+    // Validate file size (16MB)
+    if (file.size > 16 * 1024 * 1024) {
+        alert('File size must be less than 16MB.');
+        return;
+    }
+
+    // Update UI
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    
+    document.querySelector('.file-upload-content').style.display = 'none';
+    document.getElementById('fileInfo').style.display = 'block';
+    
+    // Set the file input
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    document.getElementById('file').files = dataTransfer.files;
+
+    // Auto-fill title if empty
+    const titleInput = document.getElementById('title');
+    if (!titleInput.value) {
+        const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+        titleInput.value = nameWithoutExt;
+    }
+}
+
+// Clear file selection
+function clearFileSelection() {
+    document.getElementById('file').value = '';
+    document.querySelector('.file-upload-content').style.display = 'block';
+    document.getElementById('fileInfo').style.display = 'none';
+}
+
+// Populate year options
+function populateYearOptions() {
+    const yearSelect = document.getElementById('year');
+    const currentYear = new Date().getFullYear();
+    
+    for (let year = currentYear; year >= currentYear - 10; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+}
+
+// Setup form validation
+function setupFormValidation() {
+    const form = document.getElementById('uploadForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (validateForm()) {
+            submitForm();
+        }
+    });
+}
+
+// Validate form
+function validateForm() {
+    const requiredFields = ['file', 'title', 'department', 'semester', 'subject', 'year', 'exam_type'];
+    let isValid = true;
+    
+    // Reset previous validation states
+    document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    
+    requiredFields.forEach(fieldName => {
+        const field = document.getElementById(fieldName);
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            isValid = false;
+        }
+    });
+    
+    // Validate file
+    const fileInput = document.getElementById('file');
+    if (!fileInput.files.length) {
+        document.getElementById('fileUploadArea').classList.add('is-invalid');
+        isValid = false;
+    }
+    
+    if (!isValid) {
+        alert('Please fill in all required fields.');
+    }
+    
+    return isValid;
+}
+
+// Submit form
+function submitForm() {
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+    
+    // Show progress
+    progressContainer.style.display = 'block';
+    
+    // Create FormData
+    const formData = new FormData(form);
+    
+    // Create XMLHttpRequest for progress tracking
+    const xhr = new XMLHttpRequest();
+    
+    // Upload progress
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            progressBar.style.width = percentComplete + '%';
+            progressText.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+        }
+    });
+    
+    // Upload complete
+    xhr.addEventListener('load', function() {
+        if (xhr.status === 200) {
+            progressBar.style.width = '100%';
+            progressBar.classList.remove('progress-bar-striped', 'progress-bar-animated');
+            progressBar.classList.add('bg-success');
+            progressText.textContent = 'Upload completed successfully!';
+            
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 2000);
+        } else {
+            handleUploadError('Upload failed. Please try again.');
+        }
+    });
+    
+    // Upload error
+    xhr.addEventListener('error', function() {
+        handleUploadError('Network error. Please check your connection and try again.');
+    });
+    
+    // Send request
+    xhr.open('POST', form.action || window.location.pathname);
+    xhr.send(formData);
+}
+
+// Handle upload error
+function handleUploadError(message) {
+    const submitBtn = document.getElementById('submitBtn');
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    // Reset button
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-upload me-2"></i>Upload Paper';
+    
+    // Update progress
+    progressBar.classList.add('bg-danger');
+    progressText.textContent = message;
+    
+    alert(message);
+}
+
+// Utility function
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Auto-save form data
+function saveFormData() {
+    const formData = {
+        title: document.getElementById('title').value,
+        department: document.getElementById('department').value,
+        semester: document.getElementById('semester').value,
+        subject: document.getElementById('subject').value,
+        year: document.getElementById('year').value,
+        exam_type: document.getElementById('exam_type').value,
+        description: document.getElementById('description').value
+    };
+    
+    localStorage.setItem('uploadFormData', JSON.stringify(formData));
+}
+
+// Load saved form data
+function loadFormData() {
+    const savedData = localStorage.getItem('uploadFormData');
+    if (savedData) {
+        const formData = JSON.parse(savedData);
+        
+        Object.keys(formData).forEach(key => {
+            const element = document.getElementById(key);
+            if (element && formData[key]) {
+                element.value = formData[key];
+            }
+        });
+    }
+}
+
+// Auto-save on input change
+document.addEventListener('DOMContentLoaded', function() {
+    loadFormData();
+    
+    const formInputs = document.querySelectorAll('#uploadForm input, #uploadForm select, #uploadForm textarea');
+    formInputs.forEach(input => {
+        input.addEventListener('change', saveFormData);
+        input.addEventListener('input', saveFormData);
+    });
+});
+
+// Clear saved data on successful upload
+window.addEventListener('beforeunload', function() {
+    if (document.getElementById('progressBar').style.width === '100%') {
+        localStorage.removeItem('uploadFormData');
+    }
+});
+</script>
+
+<style>
+.file-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.file-upload-area.drag-over {
+    border-color: #0d6efd;
+    background-color: #e7f3ff;
+}
+
+.file-upload-area.is-invalid {
+    border-color: #dc3545;
+}
+
+.file-info {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+}
+
+.paper-card-small {
+    transition: transform 0.2s ease;
+}
+
+.paper-card-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}
