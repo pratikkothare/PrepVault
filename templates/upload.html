@@ -19,18 +19,19 @@
                         <div class="mb-4">
                             <label for="file" class="form-label">
                                 <i class="fas fa-file-pdf me-1"></i>
-                                PDF File *
+                                <i class="fas fa-file-word me-1"></i>
+                                PDF File or Word Doc *
                             </label>
                             <div class="file-upload-area" id="fileUploadArea">
-                                <input type="file" class="form-control" id="file" name="file" accept=".pdf" required style="display: none;">
+                                <input type="file" class="form-control" id="file" name="file" accept=".pdf, .doc, .docx" required style="display: none;">
                                 <div class="file-upload-content text-center p-4">
                                     <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
-                                    <p class="mb-2">Click to select a PDF file or drag and drop</p>
+                                    <p class="mb-2">Click to select a PDF or Word document or drag and drop</p>
                                     <small class="text-muted">Maximum file size: 16MB</small>
                                 </div>
                                 <div class="file-info" id="fileInfo" style="display: none;">
                                     <div class="d-flex align-items-center p-3">
-                                        <i class="fas fa-file-pdf fa-2x text-danger me-3"></i>
+                                        <i class="fas fa-file-pdf fa-2x text-danger me-3" id="fileIcon"></i>
                                         <div class="flex-grow-1">
                                             <h6 class="mb-1" id="fileName"></h6>
                                             <small class="text-muted" id="fileSize"></small>
@@ -61,18 +62,16 @@
                                     Department *
                                 </label>
                                 <select class="form-select" id="department" name="department" required>
-                                    <option value="">Select Department</option>
                                     <option value="Computer Science">Computer Science</option>
                                     <option value="Information Technology">Information Technology</option>
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Mechanical">Mechanical</option>
+                                    <option value="Artificial Intelligence and Data Science">Artificial Intelligence and Data Science</option>
+                                    <option value="Artificial Intelligence and Machine Learning">Artificial Intelligence and Machine Learning</option>
+                                    <option value="Electronics & Telicommunication">Electronics & Telicommunication</option>
+                                    <option value="Electronics & Computer Science">Electronics & Computer Science</option>
+                                    <option value="CSE(Cyber Security)">CSE(Cyber Security)</option>
+                                    <option value="Mechatronics">Mechatronics</option>
                                     <option value="Civil">Civil</option>
-                                    <option value="Electrical">Electrical</option>
-                                    <option value="Chemical">Chemical</option>
-                                    <option value="Biotechnology">Biotechnology</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Physics">Physics</option>
-                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Mechinical">Mechinical</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -172,7 +171,7 @@
                 </div>
                 <div class="card-body">
                     <ul class="mb-0">
-                        <li>Only PDF files are accepted</li>
+                        <li>Only PDF and Word documents (.doc, .docx) are accepted</li>
                         <li>Maximum file size is 16MB</li>
                         <li>Ensure the paper is clear and readable</li>
                         <li>Use descriptive titles and accurate metadata</li>
@@ -249,8 +248,9 @@ function setupFileUpload() {
 // Handle file selection
 function handleFileSelection(file) {
     // Validate file type
-    if (file.type !== 'application/pdf') {
-        alert('Please select a PDF file only.');
+    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!validTypes.includes(file.type)) {
+        alert('Please select a PDF or Word document (.doc, .docx) only.');
         return;
     }
 
@@ -263,6 +263,14 @@ function handleFileSelection(file) {
     // Update UI
     document.getElementById('fileName').textContent = file.name;
     document.getElementById('fileSize').textContent = formatFileSize(file.size);
+    
+    // Update file icon based on file type
+    const fileIcon = document.getElementById('fileIcon');
+    if (file.type === 'application/pdf') {
+        fileIcon.className = 'fas fa-file-pdf fa-2x text-danger me-3';
+    } else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        fileIcon.className = 'fas fa-file-word fa-2x text-primary me-3';
+    }
     
     document.querySelector('.file-upload-content').style.display = 'none';
     document.getElementById('fileInfo').style.display = 'block';
