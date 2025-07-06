@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Request Upload - PrepVault{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Request Paper Upload
+                    </h4>
+                    <p class="mb-0 mt-2">Submit a request to upload a paper for admin review</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="uploadRequestForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Paper Title *</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="department" class="form-label">Department *</label>
+                                <select class="form-select" id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Mechanical">Mechanical</option>
+                                    <option value="Civil">Civil</option>
+                                    <option value="Electrical">Electrical</option>
+                                    <option value="Chemical">Chemical</option>
+                                    <option value="Biotechnology">Biotechnology</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="semester" class="form-label">Semester *</label>
+                                <select class="form-select" id="semester" name="semester" required>
+                                    <option value="">Select Semester</option>
+                                    <option value="1">1st Semester</option>
+                                    <option value="2">2nd Semester</option>
+                                    <option value="3">3rd Semester</option>
+                                    <option value="4">4th Semester</option>
+                                    <option value="5">5th Semester</option>
+                                    <option value="6">6th Semester</option>
+                                    <option value="7">7th Semester</option>
+                                    <option value="8">8th Semester</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="subject" class="form-label">Subject *</label>
+                                <input type="text" class="form-control" id="subject" name="subject" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="year" class="form-label">Year *</label>
+                                <select class="form-select" id="year" name="year" required>
+                                    <option value="">Select Year</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2020">2020</option>
+                                    <option value="2019">2019</option>
+                                    <option value="2018">2018</option>
+                                    <option value="2017">2017</option>
+                                    <option value="2016">2016</option>
+                                    <option value="2015">2015</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="exam_type" class="form-label">Exam Type *</label>
+                            <select class="form-select" id="exam_type" name="exam_type" required>
+                                <option value="">Select Exam Type</option>
+                                <option value="Mid Semester">Mid Semester</option>
+                                <option value="End Semester">End Semester</option>
+                                <option value="Quiz">Quiz</option>
+                                <option value="Assignment">Assignment</option>
+                                <option value="Lab Exam">Lab Exam</option>
+                                <option value="Practical">Practical</option>
+                                <option value="Viva">Viva</option>
+                                <option value="Project">Project</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (Optional)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                    placeholder="Add any additional information about this paper..."></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="file" class="form-label">Upload File *</label>
+                            <div class="upload-area" id="uploadArea">
+                                <div class="upload-content">
+                                    <i class="fas fa-file-pdf fa-3x text-primary mb-3" id="fileIcon"></i>
+                                    <i class="fas fa-file-word fa-3x text-primary mb-3 ms-2" id="wordIcon"></i>
+                                    <h5>Choose PDF or Word Document</h5>
+                                    <p class="text-muted">Drag and drop your file here or click to browse</p>
+                                    <input type="file" class="form-control" id="file" name="file" 
+                                           accept=".pdf,.doc,.docx" required style="display: none;">
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                </div>
+                                <div class="file-info" id="fileInfo" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file-pdf fa-2x text-primary me-3" id="selectedFileIcon"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" id="fileName"></h6>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="/dashboard" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Submit Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+.upload-area:hover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+}
+
+.upload-area.dragover {
+    border-color: #007bff;
+    background-color: #e3f2fd;
+    transform: scale(1.02);
+}
+
+.file-info {
+    background-color: #e8f5e8;
+    border: 1px solid #28a745;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+}
+
+.btn {
+    border-radius: 8px;
+}
+</style>
+
+<script>
+const uploadArea = document.getElementById('uploadArea');
+const fileInput = document.getElementById('file');
+const fileInfo = document.getElementById('fileInfo');
+const uploadContent = document.querySelector('.upload-content');
+const fileName = document.getElementById('fileName');
+const fileSize = document.getElementById('fileSize');
+const selectedFileIcon = document.getElementById('selectedFileIcon');
+
+// Drag and drop functionality
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        handleFileSelection(files[0]);
+    }
+});
+
+// File input change
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        handleFileSelection(e.target.files[0]);
+    }
+});
+
+// Handle file selection
+function handleFileSelection(file) {
+    // Validate file type - prioritize extension check for better compatibility
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    // Check file extension first (more reliable)
+    if (!allowedExtensions.includes(fileExtension)) {
+        alert('Please select a PDF or Word document (.pdf, .doc, .docx).');
+        return;
+    }
+    
+    // Additional MIME type validation for supported browsers
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (file.type && !allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        alert('Please select a PDF or Word document.');
+        return;
+    }
+    
+    // Validate file size (50MB limit)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+        alert('File size must be less than 50MB.');
+        return;
+    }
+    
+    // Update UI
+    fileName.textContent = file.name;
+    fileSize.textContent = formatFileSize(file.size);
+    
+    // Update icon based on file type
+    if (file.type === 'application/pdf' || fileExtension === '.pdf') {
+        selectedFileIcon.className = 'fas fa-file-pdf fa-2x text-danger me-3';
+    } else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileExtension === '.doc' || fileExtension === '.docx') {
+        selectedFileIcon.className = 'fas fa-file-word fa-2x text-primary me-3';
+    } else {
+        selectedFileIcon.className = 'fas fa-file fa-2x text-secondary me-3';
+    }
+    
+    uploadContent.style.display = 'none';
+    fileInfo.style.display = 'block';
+    
+    // Set the file to the input
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+}
+
+// Remove file
+function removeFile() {
+    fileInput.value = '';
+    uploadContent.style.display = 'block';
+    fileInfo.style.display = 'none';
+    uploadArea.classList.remove('dragover');
+}
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Form validation
+document.getElementById('uploadRequestForm').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+});
+</script>
+{% endblock %}

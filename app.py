@@ -15,6 +15,13 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # Database initialization
 def init_db():
     conn = sqlite3.connect('university_papers.db')
@@ -76,6 +83,31 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (paper_id) REFERENCES papers (id),
             FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Upload requests table
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS upload_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            department TEXT NOT NULL,
+            semester INTEGER NOT NULL,
+            subject TEXT NOT NULL,
+            year INTEGER NOT NULL,
+            exam_type TEXT NOT NULL,
+            file_path TEXT NOT NULL,
+            file_size INTEGER,
+            pages INTEGER,
+            requester_id INTEGER,
+            request_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            description TEXT,
+            status TEXT DEFAULT 'pending',
+            admin_response TEXT,
+            processed_by INTEGER,
+            processed_date TIMESTAMP,
+            FOREIGN KEY (requester_id) REFERENCES users (id),
+            FOREIGN KEY (processed_by) REFERENCES users (id)
         )
     ''')
     
@@ -215,20 +247,22 @@ def upload_paper():
             flash('No file selected')
             return redirect(request.url)
         
-        if file and file.filename.lower().endswith('.pdf'):
+        if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
             filename = timestamp + filename
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             
-            # Get PDF info
+            # Get file info (pages for PDFs)
+            pages = None
             try:
-                with open(file_path, 'rb') as pdf_file:
-                    pdf_reader = PyPDF2.PdfReader(pdf_file)
-                    pages = len(pdf_reader.pages)
+                if filename.lower().endswith('.pdf'):
+                    with open(file_path, 'rb') as pdf_file:
+                        pdf_reader = PyPDF2.PdfReader(pdf_file)
+                        pages = len(pdf_reader.pages)
             except:
-                pages = 0
+                pages = None
             
             file_size = os.path.getsize(file_path)
             
@@ -258,7 +292,7 @@ def upload_paper():
             flash('Paper uploaded successfully!')
             return redirect(url_for('dashboard'))
         else:
-            flash('Only PDF files are allowed')
+            flash('Only PDF and Word documents are allowed')
     
     return render_template('upload.html')
 
@@ -443,12 +477,14 @@ def delete_paper(paper_id):
 def serve_upload(filename):
     return send_file(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
+@app.route('/uploads/requests/<filename>')
+@admin_required
+def serve_request_file(filename):
+    return send_file(os.path.join(app.config['UPLOAD_FOLDER'], 'requests', filename))
+
 @app.route('/api/admin/recent-papers')
+@admin_required
 def admin_recent_papers():
-    # Check if user is admin
-    if session.get('role') != 'admin':
-        return jsonify({'error': 'Unauthorized'}), 403
-    
     conn = sqlite3.connect('university_papers.db')
     c = conn.cursor()
     
@@ -483,6 +519,213 @@ def admin_recent_papers():
         })
     
     return jsonify(papers_list)
+
+# Student upload request route
+@app.route('/request-upload', methods=['GET', 'POST'])
+@login_required
+def request_upload():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+            filename = timestamp + filename
+            
+            # Create requests directory if it doesn't exist
+            requests_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'requests')
+            os.makedirs(requests_dir, exist_ok=True)
+            
+            file_path = os.path.join(requests_dir, filename)
+            file.save(file_path)
+            
+            # Get file info
+            pages = None
+            if file.filename.lower().endswith('.pdf'):
+                try:
+                    with open(file_path, 'rb') as pdf_file:
+                        pdf_reader = PyPDF2.PdfReader(pdf_file)
+                        pages = len(pdf_reader.pages)
+                except:
+                    pages = 0
+            
+            file_size = os.path.getsize(file_path)
+            
+            # Save to database
+            conn = sqlite3.connect('university_papers.db')
+            c = conn.cursor()
+            c.execute('''
+                INSERT INTO upload_requests (title, department, semester, subject, year, exam_type, 
+                                          file_path, file_size, pages, requester_id, description)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                request.form['title'],
+                request.form['department'],
+                int(request.form['semester']),
+                request.form['subject'],
+                int(request.form['year']),
+                request.form['exam_type'],
+                filename,
+                file_size,
+                pages,
+                session['user_id'],
+                request.form.get('description', '')
+            ))
+            conn.commit()
+            conn.close()
+            
+            flash('Upload request submitted successfully! Admin will review it soon.')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Only PDF and Word documents are allowed')
+    
+    return render_template('request_upload.html')
+
+# Admin upload requests page
+@app.route('/upload-requests')
+@admin_required
+def upload_requests():
+    return render_template('upload_requests.html')
+
+# Admin upload requests management
+@app.route('/api/upload-requests')
+@admin_required
+def api_upload_requests():
+    status = request.args.get('status', 'pending')
+    conn = sqlite3.connect('university_papers.db')
+    c = conn.cursor()
+    
+    query = '''
+        SELECT ur.*, u.username as requester_name, u.email as requester_email
+        FROM upload_requests ur
+        JOIN users u ON ur.requester_id = u.id
+    '''
+    
+    if status != 'all':
+        query += ' WHERE ur.status = ? ORDER BY ur.request_date DESC'
+        c.execute(query, (status,))
+    else:
+        query += ' ORDER BY ur.request_date DESC'
+        c.execute(query)
+    
+    requests_data = c.fetchall()
+    conn.close()
+    
+    requests_list = []
+    for req in requests_data:
+        requests_list.append({
+            'id': req[0],
+            'title': req[1],
+            'department': req[2],
+            'semester': req[3],
+            'subject': req[4],
+            'year': req[5],
+            'exam_type': req[6],
+            'file_path': req[7],
+            'file_size': req[8],
+            'pages': req[9],
+            'requester_id': req[10],
+            'request_date': req[11],
+            'description': req[12],
+            'status': req[13],
+            'admin_response': req[14],
+            'processed_by': req[15],
+            'processed_date': req[16],
+            'requester_name': req[17],
+            'requester_email': req[18]
+        })
+    
+    return jsonify(requests_list)
+
+# Process upload request (accept/reject)
+@app.route('/api/upload-requests/<int:request_id>', methods=['POST'])
+@admin_required
+def process_upload_request(request_id):
+    data = request.get_json()
+    action = data.get('action')  # 'accept' or 'reject'
+    admin_response = data.get('response', '')
+    
+    conn = sqlite3.connect('university_papers.db')
+    c = conn.cursor()
+    
+    # Get the request details
+    c.execute('SELECT * FROM upload_requests WHERE id = ?', (request_id,))
+    upload_request = c.fetchone()
+    
+    if not upload_request:
+        conn.close()
+        return jsonify({'error': 'Request not found'}), 404
+    
+    if action == 'accept':
+        # Move file from requests folder to main uploads folder
+        old_filename = upload_request[7]  # file_path
+        old_path = os.path.join(app.config['UPLOAD_FOLDER'], 'requests', old_filename)
+        new_path = os.path.join(app.config['UPLOAD_FOLDER'], old_filename)
+        
+        try:
+            # Move file to main uploads folder
+            import shutil
+            shutil.move(old_path, new_path)
+            
+            # Add to papers table
+            c.execute('''
+                INSERT INTO papers 
+                (title, department, semester, subject, year, exam_type, file_path, 
+                 file_size, pages, uploader_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (upload_request[1], upload_request[2], upload_request[3], 
+                  upload_request[4], upload_request[5], upload_request[6],
+                  old_filename, upload_request[8], upload_request[9],
+                  session['user_id']))
+            
+            # Update request status
+            c.execute('''
+                UPDATE upload_requests 
+                SET status = 'accepted', admin_response = ?, processed_by = ?, 
+                    processed_date = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ''', (admin_response, session['user_id'], request_id))
+            
+            conn.commit()
+            conn.close()
+            
+            return jsonify({'message': 'Request accepted and paper added to database'})
+            
+        except Exception as e:
+            conn.close()
+            return jsonify({'error': f'Failed to process request: {str(e)}'}), 500
+    
+    elif action == 'reject':
+        # Update request status
+        c.execute('''
+            UPDATE upload_requests 
+            SET status = 'rejected', admin_response = ?, processed_by = ?, 
+                processed_date = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (admin_response, session['user_id'], request_id))
+        
+        conn.commit()
+        conn.close()
+        
+        # Optionally delete the file
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'requests', upload_request[7])
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except:
+            pass
+        
+        return jsonify({'message': 'Request rejected'})
+    
+    conn.close()
+    return jsonify({'error': 'Invalid action'}), 400
 
 if __name__ == '__main__':
     init_db()

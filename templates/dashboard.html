@@ -106,25 +106,45 @@
                     <div class="tab-content" id="dashboardTabContent">
                         <!-- Browse Papers Tab -->
                         <div class="tab-pane fade show active" id="browse" role="tabpanel">
-                            <!-- Quick Search -->
+                            <!-- Quick Actions -->
                             <div class="row mb-4">
-                                <div class="col-md-8">
-                                    <div class="input-group">
-                                        <input type="text" id="quickSearch" class="form-control" placeholder="Quick search papers...">
-                                        <button class="btn btn-primary" type="button" id="quickSearchBtn">
-                                            <i class="fas fa-search"></i>
-                                        </button>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 quick-action-card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                                            <h5 class="card-title">Quick Search</h5>
+                                            <p class="card-text">Find papers quickly</p>
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control" id="quickSearch" placeholder="Search papers...">
+                                                <select class="form-select" id="quickFilter">
+                                                    <option value="">All Types</option>
+                                                    <option value="question_paper">Question Papers</option>
+                                                    <option value="lab_practical">Lab Practicals</option>
+                                                    <option value="assignment">Assignments</option>
+                                                    <option value="notes">Notes</option>
+                                                </select>
+                                            </div>
+                                            <button class="btn btn-primary" onclick="performQuickSearch()">
+                                                <i class="fas fa-search me-2"></i>Search
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <select id="quickFilter" class="form-select">
-                                        <option value="">All Categories</option>
-                                        <option value="question_paper">Question Papers</option>
-                                        <option value="lab_practical">Lab Practicals</option>
-                                        <option value="assignment">Assignments</option>
-                                        <option value="notes">Notes</option>
-                                    </select>
+                                
+                                {% if session.role != 'admin' %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 quick-action-card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-upload fa-3x text-success mb-3"></i>
+                                            <h5 class="card-title">Request Upload</h5>
+                                            <p class="card-text">Submit a paper for admin review</p>
+                                            <a href="/request-upload" class="btn btn-success">
+                                                <i class="fas fa-paper-plane me-2"></i>Submit Request
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
+                                {% endif %}
                             </div>
 
                             <!-- Popular Papers -->
@@ -190,9 +210,9 @@
                                                 <button class="btn btn-outline-secondary" onclick="loadAllPapers()">
                                                     <i class="fas fa-list me-2"></i>View All Papers
                                                 </button>
-                                                <button class="btn btn-outline-warning" onclick="loadPendingPapers()">
-                                                    <i class="fas fa-clock me-2"></i>Pending Reviews
-                                                </button>
+                                                <a href="/upload-requests" class="btn btn-outline-warning">
+                                                    <i class="fas fa-inbox me-2"></i>Upload Requests
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
