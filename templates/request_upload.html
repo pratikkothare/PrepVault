@@ -15,7 +15,7 @@
                     <p class="mb-0 mt-2">Submit a request to upload a paper for admin review</p>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" id="uploadRequestForm">
+                    <form method="POST" action="/request-upload" enctype="multipart/form-data" id="uploadRequestForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="title" class="form-label">Paper Title *</label>
@@ -27,15 +27,14 @@
                                     <option value="">Select Department</option>
                                     <option value="Computer Science">Computer Science</option>
                                     <option value="Information Technology">Information Technology</option>
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Mechanical">Mechanical</option>
+                                    <option value="Artificial Intelligence and Data Science">Artificial Intelligence and Data Science</option>
+                                    <option value="Artificial Intelligence and Machine Learning">Artificial Intelligence and Machine Learning</option>
+                                    <option value="Electronics & Telicommunication">Electronics & Telicommunication</option>
+                                    <option value="Electronics & Computer Science">Electronics & Computer Science</option>
+                                    <option value="CSE(Cyber Security)">CSE(Cyber Security)</option>
+                                    <option value="Mechatronics">Mechatronics</option>
                                     <option value="Civil">Civil</option>
-                                    <option value="Electrical">Electrical</option>
-                                    <option value="Chemical">Chemical</option>
-                                    <option value="Biotechnology">Biotechnology</option>
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Physics">Physics</option>
-                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Mechinical">Mechinical</option>
                                 </select>
                             </div>
                         </div>
@@ -85,8 +84,7 @@
                                 <option value="End Semester">End Semester</option>
                                 <option value="Quiz">Quiz</option>
                                 <option value="Assignment">Assignment</option>
-                                <option value="Lab Exam">Lab Exam</option>
-                                <option value="Practical">Practical</option>
+                                <option value="Lab Practical">Lab Practical</option>
                                 <option value="Viva">Viva</option>
                                 <option value="Project">Project</option>
                             </select>
@@ -106,8 +104,7 @@
                                     <i class="fas fa-file-word fa-3x text-primary mb-3 ms-2" id="wordIcon"></i>
                                     <h5>Choose PDF or Word Document</h5>
                                     <p class="text-muted">Drag and drop your file here or click to browse</p>
-                                    <input type="file" class="form-control" id="file" name="file" 
-                                           accept=".pdf,.doc,.docx" required style="display: none;">
+                                    <input type="file" class="form-control" id="file" name="file" accept=".pdf,.doc,.docx" required style="display: none;">
                                     <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click()">
                                         <i class="fas fa-folder-open me-2"></i>Browse Files
                                     </button>
@@ -124,6 +121,16 @@
                                         </button>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3" id="uploadTips">
+                                <h6><i class="fas fa-info-circle me-2"></i>Upload Tips:</h6>
+                                <ul class="mb-0">
+                                    <li>Only PDF and Word documents (.pdf, .doc, .docx) are accepted</li>
+                                    <li>Maximum file size: 50MB</li>
+                                    <li>If you have trouble with drag and drop, please use the browse button</li>
+                                    <li>For Word documents, ensure they are properly formatted</li>
+                                </ul>
                             </div>
                         </div>
                         
@@ -187,7 +194,9 @@
     border-radius: 8px;
 }
 </style>
+{% endblock %}
 
+{% block scripts %}
 <script>
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('file');
@@ -211,9 +220,34 @@ uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
     uploadArea.classList.remove('dragover');
     
+    console.log('File dropped');
+    console.log('DataTransfer items:', e.dataTransfer.items.length);
+    console.log('DataTransfer files:', e.dataTransfer.files.length);
+    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-        handleFileSelection(files[0]);
+        const file = files[0];
+        console.log('Dropped file:', file.name, 'Type:', file.type, 'Size:', file.size);
+        
+        // Directly set the file to the input element
+        try {
+            const fileInput = document.getElementById('file');
+            
+            // Create a new FileList-like object
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            
+            // Set the file input's files property
+            fileInput.files = dataTransfer.files;
+            
+            console.log('File set to input element directly');
+            
+            // Now call handleFileSelection
+            handleFileSelection(file);
+        } catch (error) {
+            console.error('Error setting file to input:', error);
+            alert('There was an error processing your file. Please try using the browse button instead.');
+        }
     }
 });
 
@@ -230,16 +264,12 @@ function handleFileSelection(file) {
     const allowedExtensions = ['.pdf', '.doc', '.docx'];
     const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
     
+    // Debug log
+    console.log('File selected:', file.name, 'Type:', file.type, 'Extension:', fileExtension);
+    
     // Check file extension first (more reliable)
     if (!allowedExtensions.includes(fileExtension)) {
         alert('Please select a PDF or Word document (.pdf, .doc, .docx).');
-        return;
-    }
-    
-    // Additional MIME type validation for supported browsers
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (file.type && !allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
-        alert('Please select a PDF or Word document.');
         return;
     }
     
@@ -254,22 +284,33 @@ function handleFileSelection(file) {
     fileName.textContent = file.name;
     fileSize.textContent = formatFileSize(file.size);
     
-    // Update icon based on file type
-    if (file.type === 'application/pdf' || fileExtension === '.pdf') {
+    // Update icon based on file extension first (more reliable), then fall back to MIME type
+    if (fileExtension === '.pdf') {
         selectedFileIcon.className = 'fas fa-file-pdf fa-2x text-danger me-3';
-    } else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileExtension === '.doc' || fileExtension === '.docx') {
+    } else if (fileExtension === '.doc' || fileExtension === '.docx') {
         selectedFileIcon.className = 'fas fa-file-word fa-2x text-primary me-3';
     } else {
         selectedFileIcon.className = 'fas fa-file fa-2x text-secondary me-3';
     }
     
+    // Ensure file info is displayed
     uploadContent.style.display = 'none';
     fileInfo.style.display = 'block';
     
-    // Set the file to the input
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileInput.files = dt.files;
+    // For drag and drop operations, we need to manually set the file to the input element
+    // This is a critical step for ensuring the file is included in the form submission
+    if (window.File && window.FileList && window.FileReader) {
+        // Create a new FileList-like object
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        // Set the file input's files property
+        document.getElementById('file').files = dataTransfer.files;
+        
+        console.log('File set to input element using DataTransfer API');
+    } else {
+        console.warn('FileAPI not fully supported, file may not be properly attached');
+    }
 }
 
 // Remove file
@@ -289,8 +330,36 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Form validation
+// Add form submission event listener
 document.getElementById('uploadRequestForm').addEventListener('submit', function(e) {
+    // Debug log before submission
+    console.log('Form submission triggered');
+    const fileInput = document.getElementById('file');
+    console.log('File input value:', fileInput.value);
+    console.log('Files array:', fileInput.files);
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Please select a file before submitting.');
+        console.error('No file selected for upload');
+        return false;
+    }
+    
+    const file = fileInput.files[0];
+    console.log('Submitting file:', file.name, 'Type:', file.type, 'Size:', file.size);
+    
+    // Check if the file is a Word document or PDF
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    const allowedExtensions = ['.pdf', '.doc', '.docx'];
+    
+    if (!allowedExtensions.includes(fileExtension)) {
+        e.preventDefault();
+        alert('Please select a PDF or Word document (.pdf, .doc, .docx).');
+        console.error('Invalid file type:', fileExtension);
+        return false;
+    }
+    
+    // Disable submit button and show loading state
     const submitBtn = document.getElementById('submitBtn');
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';

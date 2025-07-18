@@ -19,8 +19,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
 
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    # Debug log
+    print(f"Checking file: {filename}")
+    if '.' not in filename:
+        print(f"No extension found in {filename}")
+        return False
+    
+    ext = filename.rsplit('.', 1)[1].lower()
+    print(f"File extension: {ext}, Allowed: {ext in ALLOWED_EXTENSIONS}")
+    return ext in ALLOWED_EXTENSIONS
 
 # Database initialization
 def init_db():
@@ -525,16 +532,25 @@ def admin_recent_papers():
 @login_required
 def request_upload():
     if request.method == 'POST':
+        print("POST request received for file upload")
+        print(f"Form data: {request.form}")
+        print(f"Files in request: {request.files}")
+        
         if 'file' not in request.files:
+            print("No file part in request")
             flash('No file selected')
             return redirect(request.url)
         
         file = request.files['file']
+        print(f"File received: {file.filename}, MIME type: {file.content_type}")
+        
         if file.filename == '':
+            print("Empty filename submitted")
             flash('No file selected')
             return redirect(request.url)
         
         if file and allowed_file(file.filename):
+            print(f"File {file.filename} is allowed")
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
             filename = timestamp + filename
@@ -545,6 +561,7 @@ def request_upload():
             
             file_path = os.path.join(requests_dir, filename)
             file.save(file_path)
+            print(f"File saved to {file_path}")
             
             # Get file info
             pages = None
@@ -553,10 +570,13 @@ def request_upload():
                     with open(file_path, 'rb') as pdf_file:
                         pdf_reader = PyPDF2.PdfReader(pdf_file)
                         pages = len(pdf_reader.pages)
-                except:
+                        print(f"PDF pages: {pages}")
+                except Exception as e:
+                    print(f"Error reading PDF: {e}")
                     pages = 0
             
             file_size = os.path.getsize(file_path)
+            print(f"File size: {file_size} bytes")
             
             # Save to database
             conn = sqlite3.connect('university_papers.db')
@@ -580,10 +600,12 @@ def request_upload():
             ))
             conn.commit()
             conn.close()
+            print("Database record created successfully")
             
             flash('Upload request submitted successfully! Admin will review it soon.')
             return redirect(url_for('dashboard'))
         else:
+            print(f"File {file.filename} is not allowed")
             flash('Only PDF and Word documents are allowed')
     
     return render_template('request_upload.html')
