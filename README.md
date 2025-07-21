@@ -154,6 +154,8 @@ NewProject/
 │   ├── login.html        # Login page
 │   ├── register.html     # Registration page
 │   ├── dashboard.html    # User dashboard
+|   ├──request_upload.html #user uplode
+|   ├──upload_request.html #admin choice for approving or rejecting student request
 │   └── upload.html       # Paper upload page
 └── uploads/              # Uploaded PDF files
     └── README.md         # Upload directory info
@@ -273,11 +275,6 @@ For issues and questions:
 ## Demo Accounts
 
 For testing purposes, the following demo accounts are available:
-
-### Admin Account
-- **Username**: `admin`
-- **Password**: `admin123`
-- **Permissions**: Full access to all features
 
 ### Student Account
 - **Username**: `student`
